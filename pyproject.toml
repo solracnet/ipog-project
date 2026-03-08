@@ -1,0 +1,12 @@
+[project]
+name = "projeto-integrador"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "agno>=2.5.3",
+    "grok>=6.2",
+    "groq>=1.0.0",
+    "python-dotenv>=1.2.1",
+]
