@@ -1,4 +1,5 @@
 # IPOG :: Projeto Integrador
+Link do projeto github: [ipog-project](https://github.com/solracnet/ipog-project)
 ### Negócio
 #### Compreenção do negócio
 Uma empresa de móveis (escritório e residencial) e produtos de tecnologia gostaria que fosse criado uma
@@ -35,7 +36,7 @@ Vamos verificar se há valores nulos, padronizar os valores monetários e criar 
 como Valor Total já calculado com (preço * quantidade) e Valor Líquido (Total - desconto).
 
 #### Modelagem
-O projeto será realizado com o framework Agno. As tools estão organizadas por responsabilidade em arquivos separados dentro da pasta `tools/`.
+O projeto será realizado com o framework Agno. As tools estão organizadas por responsabilidade em arquivos separados dentro da pasta `agents/`.
 
 #### Implantação
 Preparar o projetos com o padrão do python, uso de requirements e upload no github para que seja validado pela Profa. Fabiana.
@@ -92,53 +93,16 @@ pip install -r requirements.txt
 
 #### Exploração dos dados e design dos agentes
 
-###### Arquitetura das Tools
-
-```
-/
-├── main.py                        # Ponto de entrada — registra as tools no agente e gerencia o loop de interação
-├── data/
-│   └── SampleSuperstore.csv       # Dados de vendas
-├── reports/                       # Relatórios gerados em Markdown (criado automaticamente)
-├── tools/
-│   ├── __init__.py                # Exporta todas as tools para facilitar importação
-│   ├── data_tools.py              # Carregamento, limpeza e enriquecimento dos dados
-│   ├── analysis_tools.py          # Análises de vendas, lucro, desconto e entrega
-│   └── report_tools.py            # Exportação de relatórios em Markdown
-└── temp_tests/                    # Scripts temporários para validar funcionalidades isoladas
-```
-
-##### tools/data_tools.py — Preparação de Dados
-| Função | Descrição |
-|---|---|
-| `load_data()` | Carrega o CSV em um DataFrame Pandas |
-| `check_null_values(df)` | Verifica e remove linhas com valores nulos |
-| `calculate_sales_metrics(df)` | Adiciona colunas `Total_Sale` e `Total_Sale_After_Discount` |
-| `get_prepared_data()` | Pipeline completo: carrega, limpa e enriquece os dados |
-
-##### tools/analysis_tools.py — Análises de Vendas
-| Função | Descrição |
-|---|---|
-| `get_sales_by_region()` | Total de vendas por região |
-| `get_sales_by_category()` | Total de vendas por categoria |
-| `get_sales_by_segment()` | Total de vendas por segmento de cliente |
-| `get_profit_analysis()` | Lucro total e margem média por categoria e subcategoria |
-| `get_discount_analysis()` | Desconto médio por região e impacto no lucro |
-| `get_shipping_analysis()` | Vendas, lucro e pedidos por meio de entrega |
-
-##### tools/report_tools.py — Exportação
-| Função | Descrição |
-|---|---|
-| `save_report_to_file(content, filename)` | Salva o relatório em Markdown na pasta `./reports/` |
-
 ##### Desenvolvimento
 Como o projeto está organizado e como executar em desenvolvimento.
 Diretórios:
  * `/` -> Pasta raiz do projeto
- * `/tools` -> Tools do agente organizadas por responsabilidade
+ * `/agents` -> Tools do agente organizadas por responsabilidade
  * `/data` -> Arquivo CSV com os dados de vendas
+ * `/db` -> Banco de dados para memória
  * `/reports` -> Relatórios gerados pelo agente (criado automaticamente)
  * `/temp_tests` -> Arquivos de teste para validar funcionalidades antes de ir para o projeto principal
+ * `/tests` -> Testes para as classes do projeto
  * `/.venv` -> Ambiente virtual do Python para fixar a versão
 
 Libs:
@@ -147,7 +111,6 @@ Libs:
  * demais libs estão no requirements.txt (UV fará a gestão das dependências, mas se preferir usar o padrão, pode instalar via requirements)
 
 #### *Semana 04*
-##### Agente analista de dados
 
 ###### Arquitetura atualizada
 
@@ -159,9 +122,19 @@ Libs:
 ├── db/
 │   └── history.db                 # Banco SQLite com histórico de sessões (criado automaticamente)
 ├── agents/
-│   ├── __init__.py                # Exporta EXCEL_TOOLS e METRICS_TOOLS
+│   ├── __init__.py                # Exporta todas as listas de tools
 │   ├── excel_analyst.py           # Tools genéricas de leitura e consulta de arquivos CSV/Excel
-│   └── metrics_agent.py           # Tools especializadas em KPIs e métricas de negócio
+│   ├── metrics_agent.py           # Tools especializadas em KPIs e métricas de negócio
+│   ├── ceo_report.py              # Tools de relatório executivo (visão estratégica)
+│   ├── sales_report.py            # Tools de relatório de vendas (região, segmento, período)
+│   └── products_report.py         # Tools de relatório de produtos (categorias, rentabilidade)
+├── tests/
+│   ├── conftest.py                # Fixtures compartilhadas entre os testes
+│   ├── test_excel_analyst.py      # Testes do agente de análise de arquivos
+│   ├── test_metrics_agent.py      # Testes do agente de métricas e KPIs
+│   ├── test_ceo_report.py         # Testes do relatório executivo
+│   ├── test_sales_report.py       # Testes do relatório de vendas
+│   └── test_products_report.py    # Testes do relatório de produtos
 └── temp_tests/                    # Scripts temporários para validar funcionalidades isoladas
 ```
 
@@ -212,4 +185,75 @@ O `Session ID` é exibido após a primeira resposta e ao encerrar com `sair`.
 | `get_bottom_performers(filename, dimension, metric, n)` | Bottom N piores por métrica |
 | `detect_loss_makers(filename, dimension)` | Grupos com lucro total negativo |
 | `get_discount_impact(filename)` | Margem de lucro por faixa de desconto aplicado |
+
+**`agents/ceo_report.py`** — Relatório executivo
+
+| Tool | Descrição |
+|---|---|
+| `get_executive_summary(filename)` | KPIs financeiros e operacionais consolidados para apresentação ao CEO |
+| `get_revenue_by_region_and_segment(filename)` | Receita e margem cruzadas por região × segmento |
+| `get_top_states(filename, n)` | Top N estados por receita total |
+| `get_strategic_kpis(filename)` | KPIs de alto nível: cobertura geográfica, concentração e eficiência |
+| `get_pareto_analysis(filename, dimension)` | Análise 80/20 por dimensão (Sub-Category, State, etc.) |
+| `get_business_health_indicators(filename)` | Distribuição de margens, concentração de lucro e dependência de desconto |
+
+**`agents/sales_report.py`** — Relatório de vendas
+
+| Tool | Descrição |
+|---|---|
+| `get_sales_by_region(filename)` | Vendas, lucro e margem por região |
+| `get_sales_by_segment(filename)` | Ticket médio e margem por segmento de cliente |
+| `get_sales_by_shipping_mode(filename)` | Rentabilidade por meio de entrega |
+| `get_discount_impact_on_sales(filename)` | Vendas e margem por faixa de desconto |
+| `get_region_segment_ranking(filename)` | Ranking cruzado região × segmento |
+| `get_regional_performance_detail(filename)` | Breakdown por região × categoria × segmento |
+| `get_city_performance(filename, region)` | Performance por cidade com filtro opcional de região |
+| `get_segment_deep_dive(filename, segment)` | Análise detalhada de um segmento |
+| `get_sales_by_period(filename)` | Evolução mensal/anual (requer coluna de data no dataset) |
+| `get_sales_by_salesperson(filename)` | Performance por vendedor (requer coluna de vendedor no dataset) |
+
+**`agents/products_report.py`** — Relatório de produtos
+
+| Tool | Descrição |
+|---|---|
+| `get_sales_by_category(filename)` | Receita, volume e margem por categoria |
+| `get_sales_by_subcategory(filename)` | Detalhamento por subcategoria com desconto médio |
+| `get_loss_making_products(filename)` | Subcategorias com lucro negativo |
+| `get_discount_by_category(filename)` | Desconto médio vs. margem por linha de produto |
+| `get_top_profitable_subcategories(filename, n)` | Top N subcategorias mais lucrativas |
+| `get_category_profitability_ranking(filename)` | Ranking com classificação: Excelente / Boa / Baixa / Prejuízo |
+| `get_category_by_region(filename)` | Mix de produto por região |
+| `get_shipping_by_category(filename)` | Ship Mode utilizado por categoria e impacto na margem |
+| `get_shipping_profitability(filename)` | Rentabilidade de cada meio de entrega por categoria |
+| `get_product_volume_vs_profit(filename)` | Volume vs. lucro por unidade — diferencia commodities de produtos premium |
+
+###### Testes
+
+O projeto conta com uma suíte de testes automatizados cobrindo todos os agentes.
+
+**Executar todos os testes:**
+```bash
+uv run pytest tests/ -v
+```
+
+**Executar testes de um agente específico:**
+```bash
+uv run pytest tests/test_excel_analyst.py -v
+uv run pytest tests/test_metrics_agent.py -v
+uv run pytest tests/test_ceo_report.py -v
+uv run pytest tests/test_sales_report.py -v
+uv run pytest tests/test_products_report.py -v
+```
+
+**Cobertura da suíte (146 testes):**
+
+| Arquivo de teste | Testes | O que cobre |
+|---|---|---|
+| `tests/test_excel_analyst.py` | 31 | Carregamento de arquivo, helpers internos e todas as 8 tools de análise |
+| `tests/test_metrics_agent.py` | 28 | Todas as 7 tools de KPIs e métricas |
+| `tests/test_ceo_report.py` | 24 | Todas as 6 tools do relatório executivo |
+| `tests/test_sales_report.py` | 33 | Todas as 10 tools de vendas |
+| `tests/test_products_report.py` | 30 | Todas as 10 tools de produtos |
+
+Os testes validam: happy path, mensagens de erro para entradas inválidas, coerção de tipos (o LLM pode passar inteiros como strings) e comportamento com colunas ausentes no dataset.
 
