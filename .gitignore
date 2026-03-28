@@ -12,3 +12,8 @@ wheels/
 # Other files
 .env
 uv.lock
+
+.claude
+CLAUDE.md
+# Banco de dados de histórico (gerado em runtime)
+db/history.db
