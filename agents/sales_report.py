@@ -6,14 +6,24 @@ segmento, meio de entrega e período, incluindo impacto de descontos e
 comparações entre grupos.
 """
 
+from pathlib import Path
+
 import pandas as pd
 from agno.agent import Agent
-from agno.models.groq import Groq
 from dotenv import load_dotenv
+
+from agents.model_factory import get_model
 
 from agents.excel_analyst import _load_file, _df_to_markdown
 
 load_dotenv()
+
+# ---------------------------------------------------------------------------
+# Template do relatório de vendas
+# ---------------------------------------------------------------------------
+
+_TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "sales_report.md"
+_REPORT_TEMPLATE = _TEMPLATE_PATH.read_text(encoding="utf-8")
 
 # ---------------------------------------------------------------------------
 # Tools do agente
@@ -359,11 +369,38 @@ SALES_REPORT_TOOLS = [
 # Instruções do agente
 # ---------------------------------------------------------------------------
 
-INSTRUCTIONS = """
+INSTRUCTIONS = f"""
 Você é um analista de vendas especializado em relatórios comerciais.
 Seu objetivo é analisar o desempenho de vendas por região, segmento e canal,
 identificar tendências e apontar oportunidades de crescimento.
-Sempre apresente os resultados em Markdown com tabelas e seções claras.
+
+## Protocolo para geração do relatório completo
+
+Quando solicitado a gerar o relatório de vendas completo, siga EXATAMENTE esta sequência:
+
+1. Chame `get_sales_by_region` → preenche **Visão Geral por Região**
+2. Chame `get_sales_by_segment` → preenche **Desempenho por Segmento de Cliente**
+3. Chame `get_region_segment_ranking` → preenche **Ranking Região × Segmento**
+4. Chame `get_regional_performance_detail` → preenche **Performance Regional Detalhada**
+5. Chame `get_city_performance` sem filtro de região → preenche **Performance por Cidade**
+6. Chame `get_segment_deep_dive` sem filtro de segmento → preenche **Análise de Segmento**
+7. Chame `get_discount_impact_on_sales` → preenche **Impacto dos Descontos nas Vendas**
+8. Chame `get_sales_by_shipping_mode` → preenche **Desempenho por Meio de Entrega**
+9. Chame `get_sales_by_period` → preenche **Performance por Período**
+10. Chame `get_sales_by_salesperson` → preenche **Performance por Vendedor**
+11. Com base em todos os dados coletados, redija a seção **Destaques e Recomendações Comerciais**
+
+## Template obrigatório
+
+O relatório SEMPRE deve seguir a estrutura abaixo. Substitua cada marcador
+`{{{{PLACEHOLDER}}}}` pelo conteúdo correspondente obtido nas tools.
+Para {{{{TITULO}}}}, use o nome do negócio inferido dos dados ou "Superstore".
+Para {{{{DATA}}}}, use a data atual.
+Para {{{{ARQUIVO}}}}, use o nome do arquivo informado pelo usuário.
+
+```
+{_REPORT_TEMPLATE}
+```
 """
 
 # ---------------------------------------------------------------------------
@@ -372,7 +409,7 @@ Sempre apresente os resultados em Markdown com tabelas e seções claras.
 
 if __name__ == "__main__":
     agent = Agent(
-        model=Groq(id="llama-3.3-70b-versatile"),
+        model=get_model(),
         tools=SALES_REPORT_TOOLS,
         markdown=True,
         instructions=INSTRUCTIONS,

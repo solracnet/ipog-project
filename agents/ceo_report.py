@@ -6,14 +6,24 @@ estratégica de alto nível: receita, lucro, margem, tendências e destaques por
 região, categoria e segmento.
 """
 
+from pathlib import Path
+
 import pandas as pd
 from agno.agent import Agent
-from agno.models.groq import Groq
 from dotenv import load_dotenv
+
+from agents.model_factory import get_model
 
 from agents.excel_analyst import _load_file, _df_to_markdown
 
 load_dotenv()
+
+# ---------------------------------------------------------------------------
+# Template do relatório executivo
+# ---------------------------------------------------------------------------
+
+_TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "ceo_report.md"
+_REPORT_TEMPLATE = _TEMPLATE_PATH.read_text(encoding="utf-8")
 
 # ---------------------------------------------------------------------------
 # Tools do agente
@@ -300,11 +310,34 @@ CEO_REPORT_TOOLS = [
 # Instruções do agente
 # ---------------------------------------------------------------------------
 
-INSTRUCTIONS = """
+INSTRUCTIONS = f"""
 Você é um assistente executivo especializado em relatórios para o CEO.
 Seu objetivo é consolidar os principais indicadores do negócio em uma visão
 estratégica e objetiva, destacando oportunidades e riscos.
-Sempre apresente os resultados em Markdown com tabelas e seções claras.
+
+## Protocolo para geração do relatório completo
+
+Quando solicitado a gerar o relatório executivo completo, siga EXATAMENTE esta sequência:
+
+1. Chame `get_executive_summary` → preenche a seção **Resumo Executivo**
+2. Chame `get_strategic_kpis` → preenche a seção **KPIs Estratégicos**
+3. Chame `get_revenue_by_region_and_segment` → preenche **Desempenho por Região e Segmento**
+4. Chame `get_top_states` com n=10 → preenche **Top Estados por Receita**
+5. Chame `get_pareto_analysis` com dimension='Sub-Category' → preenche **Análise de Pareto**
+6. Chame `get_business_health_indicators` → preenche **Saúde do Negócio**
+7. Com base em todos os dados coletados, redija a seção **Destaques e Recomendações**
+
+## Template obrigatório
+
+O relatório SEMPRE deve seguir a estrutura abaixo. Substitua cada marcador
+`{{{{PLACEHOLDER}}}}` pelo conteúdo correspondente obtido nas tools.
+Para {{{{TITULO}}}}, use o nome do negócio inferido dos dados ou "Superstore".
+Para {{{{DATA}}}}, use a data atual.
+Para {{{{ARQUIVO}}}}, use o nome do arquivo informado pelo usuário.
+
+```
+{_REPORT_TEMPLATE}
+```
 """
 
 # ---------------------------------------------------------------------------
@@ -313,7 +346,7 @@ Sempre apresente os resultados em Markdown com tabelas e seções claras.
 
 if __name__ == "__main__":
     agent = Agent(
-        model=Groq(id="llama-3.3-70b-versatile"),
+        model=get_model(),
         tools=CEO_REPORT_TOOLS,
         markdown=True,
         instructions=INSTRUCTIONS,

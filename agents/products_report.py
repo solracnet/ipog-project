@@ -6,14 +6,24 @@ identificando os itens mais lucrativos, os que geram prejuízo e o impacto
 dos descontos por linha de produto.
 """
 
+from pathlib import Path
+
 import pandas as pd
 from agno.agent import Agent
-from agno.models.groq import Groq
 from dotenv import load_dotenv
+
+from agents.model_factory import get_model
 
 from agents.excel_analyst import _load_file, _df_to_markdown
 
 load_dotenv()
+
+# ---------------------------------------------------------------------------
+# Template do relatório de produtos
+# ---------------------------------------------------------------------------
+
+_TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "products_report.md"
+_REPORT_TEMPLATE = _TEMPLATE_PATH.read_text(encoding="utf-8")
 
 # ---------------------------------------------------------------------------
 # Tools do agente
@@ -334,11 +344,37 @@ PRODUCTS_REPORT_TOOLS = [
 # Instruções do agente
 # ---------------------------------------------------------------------------
 
-INSTRUCTIONS = """
+INSTRUCTIONS = f"""
 Você é um analista de produtos especializado em relatórios de portfólio.
 Seu objetivo é avaliar o desempenho de categorias e subcategorias de produtos,
 identificar os mais e menos lucrativos e analisar o impacto dos descontos.
-Sempre apresente os resultados em Markdown com tabelas e seções claras.
+
+## Protocolo para geração do relatório completo
+
+Quando solicitado a gerar o relatório de produtos completo, siga EXATAMENTE esta sequência:
+
+1. Chame `get_sales_by_category` → preenche **Desempenho por Categoria**
+2. Chame `get_sales_by_subcategory` → preenche **Desempenho por Subcategoria**
+3. Chame `get_category_profitability_ranking` → preenche **Ranking de Rentabilidade**
+4. Chame `get_top_profitable_subcategories` com n=5 → preenche **Produtos Estrela**
+5. Chame `get_loss_making_products` → preenche **Produtos com Prejuízo**
+6. Chame `get_discount_by_category` → preenche **Impacto dos Descontos**
+7. Chame `get_category_by_region` → preenche **Desempenho por Região**
+8. Chame `get_product_volume_vs_profit` → preenche **Volume vs. Rentabilidade**
+9. Chame `get_shipping_profitability` → preenche **Logística e Entrega**
+10. Com base em todos os dados coletados, redija a seção **Destaques e Recomendações de Portfólio**
+
+## Template obrigatório
+
+O relatório SEMPRE deve seguir a estrutura abaixo. Substitua cada marcador
+`{{{{PLACEHOLDER}}}}` pelo conteúdo correspondente obtido nas tools.
+Para {{{{TITULO}}}}, use o nome do negócio inferido dos dados ou "Superstore".
+Para {{{{DATA}}}}, use a data atual.
+Para {{{{ARQUIVO}}}}, use o nome do arquivo informado pelo usuário.
+
+```
+{_REPORT_TEMPLATE}
+```
 """
 
 # ---------------------------------------------------------------------------
@@ -347,7 +383,7 @@ Sempre apresente os resultados em Markdown com tabelas e seções claras.
 
 if __name__ == "__main__":
     agent = Agent(
-        model=Groq(id="llama-3.3-70b-versatile"),
+        model=get_model(),
         tools=PRODUCTS_REPORT_TOOLS,
         markdown=True,
         instructions=INSTRUCTIONS,

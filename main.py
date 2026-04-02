@@ -1,11 +1,11 @@
 from agno.agent import Agent
 from agno.db.sqlite import SqliteDb
-from agno.models.groq import Groq
 from dotenv import load_dotenv
 
 from agents.ceo_report import CEO_REPORT_TOOLS
 from agents.excel_analyst import EXCEL_TOOLS
 from agents.metrics_agent import METRICS_TOOLS
+from agents.model_factory import get_model
 from agents.products_report import PRODUCTS_REPORT_TOOLS
 from agents.sales_report import SALES_REPORT_TOOLS
 
@@ -20,7 +20,7 @@ db = SqliteDb(db_file="db/history.db")
 # Criação do Agente com as tools registradas
 # ---------------------------------------------------------------------------
 agent = Agent(
-    model=Groq(id="llama-3.3-70b-versatile"),
+    model=get_model(),
     tools=[*EXCEL_TOOLS, *METRICS_TOOLS, *CEO_REPORT_TOOLS, *SALES_REPORT_TOOLS, *PRODUCTS_REPORT_TOOLS],
     db=db,
     add_history_to_context=True,
