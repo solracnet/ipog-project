@@ -44,6 +44,30 @@ def _load_file(filename: str) -> pd.DataFrame:
     raise ValueError(f"Formato '{suffix}' não suportado. Use .csv, .xlsx ou .xls")
 
 
+_MONETARY_KEYWORDS = {
+    "sales", "profit", "lucro", "receita", "revenue", "price", "preco",
+    "cost", "custo", "ticket", "total_sale", "total_profit", "total_sales",
+    "lucro_por_unidade", "receita_por_unidade",
+}
+
+_INTEGER_KEYWORDS = {
+    "qty", "quantity", "quantidade", "num_pedidos", "pedidos",
+    "total_qty", "num_items",
+}
+
+
+def _format_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Aplica formatação legível a colunas numéricas antes de converter para Markdown."""
+    df = df.copy()
+    for col in df.select_dtypes(include="number").columns:
+        key = col.lower()
+        if key in _MONETARY_KEYWORDS:
+            df[col] = df[col].apply(lambda v: f"$ {v:,.2f}" if pd.notna(v) else "")
+        elif key in _INTEGER_KEYWORDS:
+            df[col] = df[col].apply(lambda v: f"{int(v):,}" if pd.notna(v) else "")
+    return df
+
+
 def _df_to_markdown(df: pd.DataFrame, max_rows: int = 50) -> str:
     """Converte um DataFrame para Markdown, respeitando um limite de linhas."""
     if len(df) > max_rows:
@@ -52,7 +76,7 @@ def _df_to_markdown(df: pd.DataFrame, max_rows: int = 50) -> str:
     else:
         preview = df
         footer = ""
-    return preview.to_markdown(index=False) + footer
+    return _format_df(preview).to_markdown(index=False) + footer
 
 
 # ---------------------------------------------------------------------------
