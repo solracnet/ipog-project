@@ -257,3 +257,62 @@ uv run pytest tests/test_products_report.py -v
 
 Os testes validam: happy path, mensagens de erro para entradas inválidas, coerção de tipos (o LLM pode passar inteiros como strings) e comportamento com colunas ausentes no dataset.
 
+#### *Semana 05*
+
+###### AgentOS + Agno UI
+
+O projeto suporta uma interface web moderna via [AgentOS](https://docs.agno.com/agent-os/introduction) + [Agent UI](https://github.com/agno-agi/agent-ui), permitindo interagir com o agente por um chat visual ao invés do terminal.
+
+**Arquitetura:**
+- **Backend** (`agent_os.py`) — servidor FastAPI exposto pelo AgentOS na porta `7777`
+- **Frontend** (`agent-ui/`) — interface Next.js que conecta ao backend em `http://localhost:7777`
+
+---
+
+**1. Instalar dependências do backend**
+
+Os pacotes necessários (`fastapi` e `uvicorn`) já estão no `requirements.txt`. Caso ainda não tenha instalado:
+
+```bash
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+**2. Iniciar o backend (AgentOS)**
+
+```bash
+python agent_os.py
+```
+
+O servidor sobe em `http://localhost:7777` com hot-reload ativo.
+
+**3. Instalar dependências do frontend**
+
+```bash
+cd agent-ui
+pnpm install
+```
+
+**4. Iniciar o frontend (Agno UI)**
+
+```bash
+pnpm dev
+```
+
+Acesse em `http://localhost:3000`. Por padrão, a UI já aponta para `http://localhost:7777`.
+
+> Para alterar o endpoint: passe o mouse sobre a URL no painel esquerdo da UI e clique em editar.
+
+---
+
+**Estrutura adicionada:**
+
+```
+/
+├── agent_os.py          # Ponto de entrada do AgentOS (FastAPI + uvicorn)
+└── agent-ui/            # Interface web (Next.js + Tailwind CSS)
+    ├── src/             # Código-fonte do frontend
+    ├── package.json     # Dependências Node.js
+    └── pnpm-lock.yaml   # Lockfile do pnpm
+```
+
