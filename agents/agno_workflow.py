@@ -144,8 +144,11 @@ class AnalyticsWorkflow:
 
         def route_intent(step_input: StepInput):
             """Classifica a intenção e retorna o Step especialista correspondente."""
-            # Usa o conteúdo enriquecido da etapa anterior, se disponível
-            text = (step_input.previous_step_content or step_input.input or "").lower()
+            # Usa sempre o input original do usuário para rotear.
+            # NÃO usa previous_step_content: a etapa de Preparação injeta
+            # "arquivo" e "sample" no texto enriquecido, o que sempre
+            # dispararia _KEYWORDS_DADOS antes de qualquer outro domínio.
+            text = (step_input.input or "").lower()
 
             if _contains_any(text, _KEYWORDS_DADOS):
                 return [step_dados]

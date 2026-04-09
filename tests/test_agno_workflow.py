@@ -176,13 +176,19 @@ class TestAnalyticsWorkflowInstantiation:
 
 
 class TestAnalyticsWorkflowRouting:
-    """Testa o seletor do Router diretamente, sem chamar o LLM."""
+    """Testa o seletor do Router diretamente, sem chamar o LLM.
+
+    O router usa step_input.input (query original do usuário),
+    NÃO previous_step_content — que contém "arquivo" e "sample"
+    injetados pela etapa de Preparação, o que causaria falso-positivo
+    em _KEYWORDS_DADOS para toda e qualquer pergunta.
+    """
 
     @pytest.fixture
     def workflow(self, tmp_path):
         return AnalyticsWorkflow(db_path=str(tmp_path / "history.db"))
 
-    def _make_input(self, previous_content: str = "", input_text: str = "") -> StepInput:
+    def _make_input(self, input_text: str = "", previous_content: str = "") -> StepInput:
         si = StepInput(input=input_text)
         si.previous_step_content = previous_content
         return si
@@ -193,44 +199,67 @@ class TestAnalyticsWorkflowRouting:
 
     def test_routes_to_dados_for_arquivo(self, workflow):
         selector = self._get_selector(workflow)
-        result = selector(self._make_input(previous_content="liste os arquivos disponíveis"))
+        result = selector(self._make_input(input_text="liste os arquivos disponíveis"))
         assert result[0].name == "Dados"
 
     def test_routes_to_metricas_for_kpi(self, workflow):
         selector = self._get_selector(workflow)
-        result = selector(self._make_input(previous_content="quero ver os kpis do dataset"))
+        result = selector(self._make_input(input_text="quero ver os kpis do dataset"))
         assert result[0].name == "Métricas"
 
     def test_routes_to_executivo_for_ceo(self, workflow):
         selector = self._get_selector(workflow)
-        result = selector(self._make_input(previous_content="gere o relatório executivo para o ceo"))
+        result = selector(self._make_input(input_text="gere o relatório executivo para o ceo"))
         assert result[0].name == "Executivo"
 
     def test_routes_to_vendas_for_regiao(self, workflow):
         selector = self._get_selector(workflow)
-        result = selector(self._make_input(previous_content="análise de vendas por região"))
+        result = selector(self._make_input(input_text="análise de vendas por região"))
         assert result[0].name == "Vendas"
 
     def test_routes_to_produtos_for_subcategoria(self, workflow):
-        # "subcategoria" está em _KEYWORDS_PRODUTOS e não conflita com outros domínios
         selector = self._get_selector(workflow)
-        result = selector(self._make_input(previous_content="análise de subcategoria e portfólio"))
+        result = selector(self._make_input(input_text="análise de subcategoria e portfólio"))
         assert result[0].name == "Produtos"
 
     def test_routes_to_team_completo_for_unknown(self, workflow):
-        # Texto sem nenhuma palavra-chave de domínio específico
         selector = self._get_selector(workflow)
-        result = selector(self._make_input(previous_content="quero uma análise completa geral"))
+        result = selector(self._make_input(input_text="quero uma análise completa geral"))
         assert result[0].name == "Team Completo"
 
-    def test_falls_back_to_input_when_no_previous_content(self, workflow):
+    def test_previous_content_with_arquivo_does_not_override_routing(self, workflow):
+        """Bug original: previous_content com 'arquivo' desviava toda query para step_dados."""
         selector = self._get_selector(workflow)
-        result = selector(self._make_input(previous_content="", input_text="mostre os kpis"))
-        assert result[0].name == "Métricas"
+        # Simula exatamente o que a etapa de Preparação injeta
+        enriched = "gere o relatório do ceo\n\n> **arquivo:** samplesuperstore.csv"
+        # Com o fix, o router usa input_text, não previous_content
+        result = selector(self._make_input(
+            input_text="gere o relatório do ceo",
+            previous_content=enriched,
+        ))
+        assert result[0].name == "Executivo"  # deve rotear para CEO, não para Dados
+
+    def test_sample_keyword_in_filename_does_not_override_routing(self, workflow):
+        """Bug original: 'sample' em SampleSuperstore.csv desviava para step_dados."""
+        selector = self._get_selector(workflow)
+        enriched = "gere relatório de vendas\n\n> **arquivo:** samplesuperstore.csv"
+        result = selector(self._make_input(
+            input_text="gere relatório de vendas",
+            previous_content=enriched,
+        ))
+        assert result[0].name == "Vendas"  # deve rotear para Vendas, não para Dados
 
     def test_selector_always_returns_list(self, workflow):
         selector = self._get_selector(workflow)
-        for text in ["arquivo", "kpi", "ceo", "vendas", "categoria", "pergunta aleatória"]:
-            result = selector(self._make_input(previous_content=text))
+        queries = [
+            "liste os arquivos",
+            "mostre os kpis",
+            "relatório para o ceo",
+            "análise de vendas",
+            "portfólio de produtos",
+            "pergunta aleatória",
+        ]
+        for text in queries:
+            result = selector(self._make_input(input_text=text))
             assert isinstance(result, list)
             assert len(result) == 1
