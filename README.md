@@ -316,3 +316,87 @@ Acesse em `http://localhost:3000`. Por padrão, a UI já aponta para `http://loc
     └── pnpm-lock.yaml   # Lockfile do pnpm
 ```
 
+#### *Semana 06*
+
+###### Agno Teams
+
+O projeto agora utiliza o framework **Teams** do Agno para coordenar múltiplos agentes especializados em uma única equipe coesa. O team opera no modo `coordinate`: um agente líder recebe a pergunta, decide qual(is) membro(s) acionar e consolida as respostas em uma saída única e coerente.
+
+**Arquivo:** `agents/agno_teams.py`
+
+| Membro | Nome | Responsabilidade |
+|---|---|---|
+| `data_analyst` | Analista de Dados | Leitura e inspeção de arquivos CSV/Excel |
+| `metrics_analyst` | Analista de Métricas | KPIs, dashboards e indicadores de performance |
+| `ceo_analyst` | Analista Executivo | Relatório estratégico para o CEO |
+| `sales_analyst` | Analista de Vendas | Performance comercial por região e segmento |
+| `products_analyst` | Analista de Produtos | Portfólio de produtos e rentabilidade |
+
+Cada membro recebe as tools do seu domínio e instruções específicas. O team é instanciado via a classe `agno_teams` e expõe o atributo `team` (objeto `Team` do Agno) e um atributo por membro para reutilização no Workflow.
+
+###### Agno Workflow
+
+O **Workflow** orquestra o team usando o framework `Workflow` do Agno com uma pipeline de dois estágios:
+
+**Arquivo:** `agents/agno_workflow.py`
+
+```
+Entrada do usuário
+       │
+       ▼
+┌─────────────────┐
+│  Step: Preparação │  ← injeta "SampleSuperstore.csv" se nenhum arquivo for mencionado
+└────────┬────────┘
+         │
+         ▼
+┌──────────────────────┐
+│  Router: Roteador de │  ← classifica a intenção por palavras-chave
+│      Intenção        │
+└──┬───┬───┬───┬───┬───┘
+   │   │   │   │   │
+ Dados Métr. CEO Vend. Prod. Team Completo
+```
+
+**Domínios de roteamento:**
+
+| Domínio | Palavras-chave (exemplos) | Step |
+|---|---|---|
+| Dados | `arquivo`, `esquema`, `colunas`, `amostra` | Dados |
+| Métricas | `kpi`, `dashboard`, `indicador`, `margem` | Métricas |
+| Executivo | `ceo`, `executivo`, `estrateg`, `pareto` | Executivo |
+| Vendas | `vendas`, `região`, `segmento`, `desconto` | Vendas |
+| Produtos | `produto`, `categoria`, `portfólio`, `lucro` | Produtos |
+| *(fallback)* | qualquer outra pergunta | Team Completo |
+
+O `main.py` agora usa diretamente o `AnalyticsWorkflow`, que expõe o `workflow` do Agno com persistência de sessão via SQLite (`db/history.db`).
+
+**Estrutura adicionada:**
+
+```
+/
+├── agents/
+│   ├── agno_teams.py     # Classe agno_teams: define os 5 membros e o Team Agno
+│   └── agno_workflow.py  # Classe AnalyticsWorkflow: Step de preparação + Router
+└── tests/
+    ├── test_agno_teams.py    # 22 testes: instanciação, membros e ferramentas do team
+    └── test_agno_workflow.py # 28 testes: helpers, keywords, roteamento e workflow
+```
+
+**Cobertura de testes atualizada (196 testes totais):**
+
+| Arquivo de teste | Testes | O que cobre |
+|---|---|---|
+| `tests/test_excel_analyst.py` | 31 | Tools de análise de arquivos |
+| `tests/test_metrics_agent.py` | 28 | Tools de KPIs e métricas |
+| `tests/test_ceo_report.py` | 24 | Tools do relatório executivo |
+| `tests/test_sales_report.py` | 33 | Tools de vendas |
+| `tests/test_products_report.py` | 30 | Tools de produtos |
+| `tests/test_agno_teams.py` | 22 | Instanciação, membros e tools do team |
+| `tests/test_agno_workflow.py` | 28 | Helpers, keywords, roteamento e workflow |
+
+**Executar os novos testes:**
+```bash
+uv run pytest tests/test_agno_teams.py -v
+uv run pytest tests/test_agno_workflow.py -v
+```
+
