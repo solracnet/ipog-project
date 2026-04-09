@@ -1,0 +1,57 @@
+site_name: IPOG Analytics — Documentação Técnica
+site_description: Documentação técnica do projeto integrador IPOG — agente de análise de dados com Agno
+site_author: Carlos Sousa
+repo_url: https://github.com/solracnet/ipog-project
+repo_name: solracnet/ipog-project
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Mudar para modo escuro
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Mudar para modo claro
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - tables
+  - attr_list
+
+nav:
+  - Início: index.md
+  - Setup: setup.md
+  - Arquitetura: arquitetura.md
+  - Agentes:
+    - Visão Geral: agentes/index.md
+    - Analista de Dados: agentes/excel_analyst.md
+    - Analista de Métricas: agentes/metrics_agent.md
+    - Analista Executivo: agentes/ceo_report.md
+    - Analista de Vendas: agentes/sales_report.md
+    - Analista de Produtos: agentes/products_report.md
+  - Teams: teams.md
+  - Workflow: workflow.md
+  - AgentOS + UI: agent_os.md
+  - Testes: testes.md

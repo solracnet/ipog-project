@@ -17,3 +17,6 @@ CLAUDE.md
 agent-ui/
 # Banco de dados de histórico (gerado em runtime)
 db/history.db
+
+# MkDocs — site gerado (não versionado)
+site/
