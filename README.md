@@ -1,5 +1,20 @@
 # IPOG :: Projeto Integrador
 Link do projeto github: [ipog-project](https://github.com/solracnet/ipog-project)
+
+### Relatórios
+Os relatórios estão na pasta **/reports**.
+Mas também podem ser executados de forma dinâmica através do console ou do agno-ui.
+
+#### Relatório Executivo (CEO)
+![CEO Report](images/ceo_report.png)
+
+#### Relatório de Produtos
+![Product Report](images/product_report.png)
+
+#### Relatório de Vendas
+![Sales Report](images/sales_report.png)
+
+
 ### Negócio
 #### Compreenção do negócio
 Uma empresa de móveis (escritório e residencial) e produtos de tecnologia gostaria que fosse criado uma
@@ -9,6 +24,7 @@ Com os dados disponilizados, o cliente poderá gerar relatórios para seus gesto
 Os relatórios serão disponibilizados em Markdown como resposta direta a pergunta do prompt.
 
 #### Compreenção dos dados
+![Dataset](images/dataset.png)
 ###### Informações presentes na planilha
  * Ship Mode (Meio de entrega)
  * Segment (Segmento)
@@ -301,7 +317,7 @@ pnpm dev
 
 Acesse em `http://localhost:3000`. Por padrão, a UI já aponta para `http://localhost:7777`.
 
-> Para alterar o endpoint: passe o mouse sobre a URL no painel esquerdo da UI e clique em editar.
+![AgentUI](images/agentui.png)
 
 ---
 
@@ -368,7 +384,7 @@ Entrada do usuário
 | Produtos | `produto`, `categoria`, `portfólio`, `lucro` | Produtos |
 | *(fallback)* | qualquer outra pergunta | Team Completo |
 
-O `main.py` agora usa diretamente o `AnalyticsWorkflow`, que expõe o `workflow` do Agno com persistência de sessão via SQLite (`db/history.db`).
+O `main.py` usa diretamente o `AnalyticsWorkflow`, que expõe o `workflow` do Agno com persistência de sessão via SQLite (`db/history.db`).
 
 **Estrutura adicionada:**
 
@@ -400,3 +416,4 @@ uv run pytest tests/test_agno_teams.py -v
 uv run pytest tests/test_agno_workflow.py -v
 ```
 
+![Chat Terminal](images/terminal.png)

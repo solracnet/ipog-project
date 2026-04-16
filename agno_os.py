@@ -27,6 +27,14 @@ agent_os = AgentOS(
         "vendas e produtos via workflow inteligente."
     ),
     db=SqliteDb(db_file="db/history.db"),
+    agents=[
+        analytics._teams.data_analyst,
+        analytics._teams.metrics_analyst,
+        analytics._teams.ceo_analyst,
+        analytics._teams.sales_analyst,
+        analytics._teams.products_analyst,
+    ],
+    teams=[analytics._teams.team],
     workflows=[analytics.workflow],
 )
 
